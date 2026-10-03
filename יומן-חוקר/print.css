@@ -1,0 +1,151 @@
+/* יומן חוקר.ת — הדפסה A4, שחור־לבן, גרסה 4.
+   עיקרון: הפעולה היא הדבר הבולט ביותר. כל משימה = [מספר + פועל עם אייקון] → [הוראה קצרה] → [תוכן].
+   הדגשה רק לפועל. רווח ברור בין הוראה לתוכן. יישור לימין, בלי יישור לשני הצדדים. */
+@font-face{font-family:"SKF Pogo";src:url("fonts/SKFPogo-Regular.otf")}
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;background:#888}
+body{font-family:"Rubik",Arial,sans-serif;color:#000;font-size:13pt;line-height:1.6;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{width:210mm;height:297mm;margin:8mm auto;background:#fff;padding:9mm 13mm 7mm;display:flex;flex-direction:column;overflow:hidden}
+@media print{html,body{background:#fff}.page{margin:0;break-after:page}}
+p{margin:0}
+b{font-weight:700}
+.ic{width:1.2em;height:1.2em;vertical-align:-.22em;display:inline-block;flex:0 0 auto}
+.blank{display:inline-block;min-width:38mm;border-bottom:1.5px solid #000;height:1.05em;vertical-align:baseline}
+.blank.long{flex:1;min-width:60mm}
+
+/* header: page number + one-idea title + progress strip */
+.ph{display:grid;grid-template-columns:auto 1fr;gap:1.5mm 4mm;align-items:center;border-bottom:2.5px solid #000;padding-bottom:2mm;margin-bottom:3mm}
+.pnum{grid-row:span 2;width:12mm;height:12mm;border-radius:50%;background:#000;color:#fff;display:grid;place-items:center;font-size:19pt;font-weight:700}
+.crumb{font-size:9.5pt}
+.ph h2{margin:0;font-size:18pt;line-height:1.15;font-weight:700}
+.prog{grid-column:2;display:flex;align-items:center;gap:1.6mm;font-size:9.5pt;flex-wrap:wrap}
+.prog span{display:inline-flex;align-items:center;gap:1mm;color:#666}
+.prog span.cur{color:#000;font-weight:700;border:1.5px solid #000;border-radius:3mm;padding:0 2mm}
+.prog span.done{color:#000}
+.prog i{font-style:normal}
+.prog b{color:#999;font-weight:400}
+.cover{margin:0 0 3mm;display:flex;justify-content:space-between;align-items:flex-end;gap:6mm}
+.cover h1{font-family:"SKF Pogo","Rubik";font-weight:400;font-size:28pt;line-height:1.05;margin:0}
+.cover .name{display:flex;align-items:flex-end;gap:2mm;font-size:12pt;width:70mm}
+.pbody{display:flex;flex-direction:column;gap:3mm;flex:1}
+.pf{display:flex;justify-content:space-between;gap:4mm;border-top:1px solid #000;padding-top:1.4mm;margin-top:2mm;font-size:9.5pt}
+.pf .key{display:flex;align-items:center;gap:1.5mm}
+
+/* task: the action is the headline */
+.task{border:2px solid #000;border-radius:3.5mm;padding:2.6mm 4mm 3mm}
+.task.is-up{border-style:dashed}
+.th{display:flex;align-items:center;gap:2.5mm;margin-bottom:1.6mm}
+.tnum{flex:0 0 auto;min-width:9mm;height:9mm;padding:0 1.5mm;border-radius:4.5mm;border:2.5px solid #000;display:grid;place-items:center;font-size:13pt;font-weight:700;line-height:1}
+.act{display:inline-flex;align-items:center;gap:1.8mm;background:#000;color:#fff;border-radius:2.5mm;padding:.6mm 3mm .6mm 3.4mm;font-size:13.5pt}
+.act .ic{width:6mm;height:6mm}
+.tag{display:inline-flex;align-items:center;gap:1mm;font-size:10pt;border:1.5px solid #000;border-radius:2mm;padding:0 2mm}
+.inst{font-size:12.5pt;line-height:1.5}
+.inst + .inst{margin-top:.4mm}
+.lst{margin:2mm 0 0;padding-inline-start:7mm}
+.lst li{margin-bottom:.6mm}
+.llabel{margin:2.6mm 0 0;font-size:11.5pt}
+.lines{height:calc(var(--n)*9.5mm);background:repeating-linear-gradient(to bottom,transparent 0 9mm,#444 9mm 9.5mm)}
+.inst + .lines,.lst + .lines{margin-top:1.5mm}
+
+/* choices: big boxes, optional icon per option */
+.opts{list-style:none;margin:2.6mm 0 0;padding:0;display:grid;gap:2mm}
+.opts.inline{display:flex;flex-wrap:wrap;gap:2mm 7mm}
+.opts li{display:flex;align-items:center;gap:2.4mm}
+.box{flex:0 0 auto;width:6mm;height:6mm;border:2px solid #000;border-radius:1mm}
+.box.round{border-radius:50%}
+.oi{width:6mm;height:6mm}
+.conf{margin-top:3mm;padding-top:2.4mm;border-top:1px dashed #999}
+.scale{display:flex;gap:6mm;margin-top:1.6mm}
+.scale span{display:flex;flex-direction:column;align-items:center;gap:.6mm;width:20mm}
+.pie{width:9mm;height:9mm}
+.scale small{font-size:10pt}
+
+/* tables / fields */
+table{width:100%;border-collapse:collapse;margin-top:2.4mm;table-layout:fixed}
+th,td{border:2px solid #000;padding:1.6mm 3mm;text-align:start;font-size:12pt}
+thead th{background:#ececec}
+tbody th{width:38%;font-weight:400}
+tbody th .ic{margin-inline-end:1.5mm}
+tbody td{height:15mm}
+.fields{display:grid;gap:3mm;margin-top:2.6mm}
+.field{display:flex;align-items:flex-end;gap:2.5mm}
+.flowstep{display:flex;align-items:center;justify-content:center;gap:3mm;font-size:13pt;margin:-.6mm 0}
+.flowstep .big{width:7mm;height:7mm}
+
+/* classify / marks: circle a labelled choice — no codes to remember */
+.kinds{display:flex;flex-wrap:wrap;gap:1.5mm 6mm;margin:2.2mm 0 0;padding:1.6mm 3mm;background:#f0f0f0;border-radius:2mm;font-size:11pt}
+.kinds span{display:inline-flex;align-items:center;gap:1.2mm}
+.rows{list-style:none;margin:2.4mm 0 0;padding:0;display:grid;gap:2mm}
+ol.rows{counter-reset:r}
+.rows li{display:flex;align-items:center;gap:3mm;font-size:12pt}
+ol.rows li::before{counter-increment:r;content:counter(r);flex:0 0 5mm;font-size:10pt}
+.rows .txt{flex:1}
+.pick2,.pick3{display:inline-flex;gap:2mm;flex:0 0 auto}
+.pill{display:inline-flex;align-items:center;gap:1mm;border:1.6px solid #000;border-radius:5mm;padding:.3mm 2.6mm;font-size:10.5pt}
+.pill.on{outline:2.5px solid #000;outline-offset:1.2mm}
+.rows li.ex{color:#333}
+.exl{font-size:9pt;border:1px solid #000;border-radius:1.5mm;padding:0 1.5mm}
+.mk3{display:inline-grid;place-items:center;width:7.5mm;height:7.5mm;border:1.8px solid #000;border-radius:50%;font-style:normal;font-weight:700;font-size:12pt}
+
+/* three ways to answer — the scaffold is visible by default */
+.ways{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin-top:2mm}
+.way{border:1.5px solid #000;border-radius:2.5mm;padding:2mm 3mm}
+.wt{display:flex;align-items:center;gap:1.4mm;flex-wrap:wrap;font-size:11.5pt;margin-bottom:1.4mm}
+.fr{font-size:12pt;margin:2.6mm 0;display:flex;align-items:flex-end;gap:1.5mm}
+.fr .blank{flex:1}
+.selfbox{min-height:30mm;background:repeating-linear-gradient(to bottom,transparent 0 9mm,#bbb 9mm 9.4mm)}
+.selfbox.tall{min-height:70mm;border:2px solid #000;border-radius:3mm;background:none;margin-top:2.6mm}
+
+/* reading */
+.texts{display:grid;grid-template-columns:1fr 1fr;gap:4mm}
+.txtbox{border:2px solid #000;border-radius:3mm;padding:2.4mm 4mm;font-size:12pt;line-height:1.65}
+.txtbox .tt{margin:0 0 1mm;font-weight:700}
+.txtbox ul{margin:0;padding-inline-start:5mm}
+.note{font-size:11.5pt;border:2px solid #000;border-radius:3mm;padding:1.6mm 4mm;background:#f2f2f2}
+.xbox{border:2px solid #000;border-radius:3mm;padding:2.4mm 4mm;font-size:12pt}
+.xbox .xt{margin-bottom:1mm}
+.chainrow{display:flex;align-items:center;gap:1.5mm;margin-top:2.6mm}
+.cbox{flex:1;min-height:15mm;border:2px solid #000;border-radius:2.5mm;display:grid;place-items:center;font-weight:700;font-size:12pt;text-align:center;padding:1mm}
+.carr{font-size:16pt;font-weight:700}
+
+/* diagram-reading route + numbered markers that match the steps */
+.route{display:flex;align-items:center;flex-wrap:wrap;gap:2mm 3mm;border:2px solid #000;border-radius:3mm;padding:2mm 4mm;background:#f0f0f0;font-size:12pt}
+.route span{display:inline-flex;align-items:center;gap:1.4mm}
+.rarr{font-weight:700}
+.mk{display:inline-grid;place-items:center;width:6.5mm;height:6.5mm;border-radius:50%;background:#000;color:#fff;font-size:10.5pt;font-weight:700;font-style:normal}
+.dg{margin:0}
+.dg-title{display:flex;align-items:center;gap:2mm;font-weight:700;font-size:12pt;margin-bottom:1mm}
+.dg svg{width:100%;max-height:44mm;height:auto;display:block;direction:ltr}
+.legend{display:flex;justify-content:center;align-items:center;gap:6mm;font-size:10.5pt;margin-top:1.4mm;border:1.5px dashed #000;border-radius:2mm;padding:.8mm 3mm;width:max-content;margin-inline:auto}
+.lg{display:inline-block;width:11mm;height:0;border-top:3px solid #000;vertical-align:middle}
+.lg.sw{border-top-style:dashed}
+.ln{fill:none;stroke:#000;stroke-width:2.2}.fillw{fill:#fff}.dash{stroke-dasharray:6 5;stroke-width:1.3}.dot{fill:#000}
+.sw{stroke:#000;stroke-width:2.6;stroke-dasharray:7 5;fill:none}.lw{stroke:#000;stroke-width:3.2;fill:none}
+.sw.hl3{stroke-width:4.2}
+.lbl{font-family:"Rubik";font-size:17px;fill:#000;text-anchor:middle}
+.num circle{fill:#fff;stroke:#000;stroke-width:2}.num circle.hl{stroke-width:3.6}.num text{font-family:"Rubik";font-size:14px;font-weight:700;text-anchor:middle;fill:#000}
+/* fit */
+tbody td{height:11mm}
+.dg svg{max-height:36mm}
+.task{padding:2.2mm 4mm 2.6mm}
+.th{margin-bottom:1mm}
+.fr{margin:1.6mm 0}
+.selfbox{min-height:24mm}
+.pbody{gap:2.6mm}
+.flowstep{margin:-1mm 0}
+.conf{margin-top:2.2mm;padding-top:1.8mm}
+.pie{width:8mm;height:8mm}
+tbody td{height:9.5mm}
+thead th{padding:1mm 3mm}
+.dg svg{max-height:30mm}
+.selfbox{min-height:20mm}
+.fr{margin:1.2mm 0}
+.llabel{margin-top:1.6mm}
+.kinds{margin-top:1.6mm;padding:1.2mm 3mm}
+.rows{gap:1.6mm;margin-top:1.8mm}
+.dg-title{margin-bottom:0}
+.route{padding:1.4mm 4mm}
+.pbody{gap:2.2mm}
+.ph{margin-bottom:2.4mm}
+.pf{margin-top:1.4mm}
