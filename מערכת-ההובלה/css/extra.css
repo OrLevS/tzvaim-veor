@@ -1,0 +1,70 @@
+/* מערכת ההובלה — תוספות לעיצוב המשותף (צבעים-ואור/css/style.css) */
+.hv-legend{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:center;padding:8px 16px 0;font-size:14px}
+.hv-legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-inline-end:6px;vertical-align:-1px}
+
+/* vessels + blood: picture beside an info card */
+.vs,.bl{display:grid;grid-template-columns:1.6fr 1fr;align-items:center;gap:8px;padding:8px}
+.vs-card{background:var(--cream);border-radius:16px;padding:14px 18px;min-height:180px;text-align:start}
+.vs-card h4{margin:0 0 8px;font-family:var(--display);font-size:26px;color:var(--navy);font-weight:400}
+.vs-card dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px}
+.vs-card dt{font-weight:700;color:var(--rust)}
+.vs-card dd{margin:0}
+.vs-card p{margin:0}
+.vs-hint{color:var(--muted)}
+.vs-g{transition:transform .35s var(--ease),opacity .3s}
+.vs:has(.vs-g.on) .vs-g:not(.on){opacity:.35}
+@media (max-width:860px){.vs,.bl{grid-template-columns:1fr}}
+
+/* pulse */
+.pl{padding:18px;display:grid;gap:16px}
+.pl-timer{display:flex;align-items:center;justify-content:center;gap:18px}
+.pl-go{border:none;background:var(--coral);color:#fff;border-radius:999px;padding:10px 22px;font-size:18px;cursor:pointer;font-weight:700}
+.pl-out{font-family:var(--display);font-size:64px;line-height:1;color:var(--navy);min-width:2.2ch;text-align:center}
+.pl-out.done{color:var(--coral)}
+.pl-data{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pl-data label{display:grid;gap:4px;font-size:14px;text-align:start}
+.pl-in{font:inherit;font-size:18px;padding:8px 12px;border:2px solid var(--beige);border-radius:12px;background:var(--paper);direction:ltr;text-align:right}
+.pl-res{display:flex;justify-content:center;gap:48px}
+.pl-col{display:grid;justify-items:center;gap:2px}
+.pl-col b{font-family:var(--display);font-size:48px;line-height:1;color:var(--navy);font-weight:400}
+.pl-heart{width:90px;height:84px}
+.pl-heart.beat{animation:hv-beat 1s infinite}
+@keyframes hv-beat{0%,100%{transform:scale(1)}15%{transform:scale(1.14)}30%{transform:scale(.97)}}
+.still .pl-heart.beat{animation:none}
+@media (prefers-reduced-motion:reduce){.pl-heart.beat{animation:none}}
+@media (max-width:700px){.pl-data{grid-template-columns:1fr}}
+
+/* heart */
+.hh .hh-c{transition:transform .35s var(--ease)}
+.hh .hh-f{transition:opacity .4s}
+.hh-av,.hh-sl{transition:opacity .25s}
+.hh-v.flow{stroke-dasharray:10 8;animation:hv-flow .6s linear infinite}
+@keyframes hv-flow{to{stroke-dashoffset:-18}}
+.still .hh-v.flow{animation:none}
+
+/* route */
+.rt .chain{padding:10px 16px}
+.rt .chain-slots{justify-content:center}
+.card-c.fixed{background:var(--navy);color:#fff;cursor:default}
+
+/* exercise */
+.ex{display:grid;grid-template-columns:160px 1fr;gap:20px;align-items:center;padding:20px}
+.ex-fig{display:grid;justify-items:center;gap:6px}
+.ex-fig .pl-heart{width:120px;height:110px}
+.ex-state{font-family:var(--display);font-size:24px;font-weight:400;color:var(--navy)}
+.ex-bars{display:grid;gap:12px}
+.ex-row{display:grid;grid-template-columns:230px 1fr 64px;align-items:center;gap:12px;text-align:start}
+.ex-n{font-size:15px}
+.ex-track{height:22px;background:var(--cream);border-radius:999px;overflow:hidden}
+.ex-track i{display:block;height:100%;border-radius:999px;transition:width .3s var(--ease)}
+.ex-v{font-weight:700;color:var(--navy)}
+@media (max-width:860px){.ex{grid-template-columns:1fr}.ex-row{grid-template-columns:1fr 64px}.ex-track{grid-column:1/-1;grid-row:2}}
+
+/* home: curriculum coverage */
+.cov{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;padding:0;margin:0;list-style:none}
+.cov li{background:var(--paper);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+.cov b{display:block;font-family:var(--sub);font-size:19px;color:var(--navy);margin-bottom:4px}
+.cov span{font-size:15px;color:var(--muted)}
+.mats{display:flex;flex-wrap:wrap;gap:10px}
+.mats a{background:var(--navy);color:#fff;text-decoration:none;border-radius:999px;padding:8px 16px;font-size:15px}
+.mats a.ghost{background:var(--paper);color:var(--navy);border:2px solid var(--navy)}
