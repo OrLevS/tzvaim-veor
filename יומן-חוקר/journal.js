@@ -55,6 +55,14 @@ const DIAGRAMS = {
    <div class="legend"><span class="mk">2</span><span><i class="lg sw"></i> קו מקווקו = אור כחול (קצר־גל)</span><span><i class="lg lw"></i> קו רציף = אור אדום (ארוך־גל)</span></div></figure>`
 };
 
+/* יחידות אחרות (למשל מערכת ההובלה) מוסיפות תרשימים משלהן דרך window.JOURNAL_DIAGRAMS */
+Object.assign(DIAGRAMS, window.JOURNAL_DIAGRAMS || {});
+Object.assign(P, window.JOURNAL_ICONS || {});  /* ואייקונים משלהן (צורה = משמעות, גם בשחור־לבן) */
+/* גרסת מורה: ?key=1 מציג את התשובה (שדה key) מתחת לכל משימה */
+const KEY = new URLSearchParams(location.search).get('key') === '1';
+if(KEY){ document.body.classList.add('is-key'); document.title += ' · גרסת מורה'; }
+const keyHtml = b => KEY && b.key ? `<p class="keyans"><b>למורה:</b> ${rich(b.key)}</p>` : '';
+
 function taskHead(b){
   const a = IX[b.id], num = a.tasks.length ? `<span class="tnum">${a.tasks.join('–')}</span>` : '';
   const act = b.act ? `<span class="act">${icon(ACT[b.act]||'think')}<b>${esc(b.act)}</b></span>` : '';
@@ -77,13 +85,13 @@ function block(b){
     case 'flow': return `<div class="flowstep" id="${b.id}">${icon('down','big')}<b>${rich(b.text)}</b>${icon('down','big')}</div>`;
     case 'classify': return `<div class="task" id="${b.id}">${taskHead(b)}
       <div class="kinds">${b.kinds.map(k=>`<span>${icon(k.ic)} <b>${esc(k.t)}</b> = ${esc(k.d)}</span>`).join('')}</div>
-      <ul class="rows">${b.items.map((x,i)=>`<li class="${i===0&&b.example!=null?'ex':''}"><span class="txt">${rich(x)}</span><span class="pick2">${b.kinds.map((k,j)=>`<span class="pill${i===0&&b.example===j?' on':''}">${icon(k.ic)} ${esc(k.t)}</span>`).join('')}</span>${i===0&&b.example!=null?'<small class="exl">דוגמה</small>':''}</li>`).join('')}</ul></div>`;
+      <ul class="rows">${b.items.map((x,i)=>`<li class="${i===0&&b.example!=null?'ex':''}"><span class="txt">${rich(x)}</span><span class="pick2">${b.kinds.map((k,j)=>`<span class="pill${i===0&&b.example===j?' on':''}">${icon(k.ic)} ${esc(k.t)}</span>`).join('')}</span>${i===0&&b.example!=null?'<small class="exl">פתור</small>':''}</li>`).join('')}</ul>${b.lines?lines(b.lines,b.linesLabel):''}</div>`;
     case 'marks': return `<div class="task" id="${b.id}">${taskHead(b)}
       <div class="kinds">${[['✓','מסכים.ה ויכול.ה להסביר'],['?','לא בטוח.ה'],['✗','חושב.ת שזה לא נכון']].map(([m,t])=>`<span><i class="mk3">${m}</i> ${t}</span>`).join('')}</div>
       <ol class="rows">${b.items.map(x=>`<li><span class="txt">${rich(x)}</span><span class="pick3"><i class="mk3">✓</i><i class="mk3">?</i><i class="mk3">✗</i></span></li>`).join('')}</ol>${b.lines?lines(b.lines,b.linesLabel):''}</div>`;
     case 'answer3': return `<div class="task" id="${b.id}">${taskHead(b)}<p class="inst">בחרו דרך אחת לענות:</p>
-      <div class="ways"><div class="way"><p class="wt">${icon('write')} <b>עם עזרה</b></p>${b.frame.map(f=>`<p class="fr">${rich(f)}</p>`).join('')}</div>
-      <div class="way"><p class="wt">${icon('write')} <b>בעצמי</b> — במילים, או ${icon('draw')} <b>בציור</b> עם 3 תוויות</p><div class="selfbox"></div></div></div></div>`;
+      <div class="ways"><div class="way"><p class="wt">${icon('write')} <b>עם עזרה</b></p>${b.frame.map(f=>`<p class="fr">${rich(f)}</p>`).join('')}${b.tall?'<p class="fr"><span class="blank"></span></p><p class="fr"><span class="blank"></span></p>':''}</div>
+      <div class="way"><p class="wt">${icon('write')} <b>בעצמי</b> — במילים, או ${icon('draw')} <b>בציור</b> עם 3 תוויות</p><div class="selfbox${b.tall?' tall2':''}"></div></div></div></div>`;
     case 'draw': return `<div class="task" id="${b.id}">${taskHead(b)}<div class="selfbox tall"></div></div>`;
     case 'chain': return `<div class="task" id="${b.id}">${taskHead(b)}<div class="chainrow">${b.boxes.map((x,i)=>`<span class="cbox">${x?esc(x):''}</span>${i<b.boxes.length-1?'<span class="carr">←</span>':''}`).join('')}</div></div>`;
     case 'texts': return `<div class="texts" id="${b.id}">${b.items.map(t=>`<div class="txtbox"><p class="tt">${esc(t.title)}</p>${t.list?`<ul>${t.list.map(x=>`<li>${rich(x)}</li>`).join('')}</ul>`:`<p>${rich(t.text)}</p>`}</div>`).join('')}${spk(b)}</div>`;
@@ -100,7 +108,7 @@ const strip = pi => `<div class="prog" aria-label="איפה אנחנו">${STEPS.
 root.innerHTML = L.pages.map((p,pi)=>`<section class="page${p.cover?' first':''}">
   <header class="ph"><span class="pnum">${pi+1}</span><div class="phx"><span class="crumb">יומן חוקר.ת · שיעור ${L.n} · ${esc(L.title)}</span><h2>${esc(p.title)}</h2></div>${strip(pi)}</header>
   ${p.cover?`<div class="cover"><h1>${esc(L.title)}</h1><p class="name">שם: <span class="blank long"></span></p></div>`:''}
-  <div class="pbody">${p.blocks.map(block).join('')}</div>
+  <div class="pbody">${p.blocks.map(b=>block(b)+keyHtml(b)).join('')}</div>
   <footer class="pf"><span>עמוד ${pi+1} מתוך ${NP}</span>${pi===0?`<span class="key">${icon('up')} אתגר לבחירה — לא חובה</span>`:''}</footer>
 </section>`).join('');
 

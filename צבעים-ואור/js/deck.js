@@ -25,74 +25,58 @@ function frame(type, stageLabel, title, body, nowHtml, extra=''){
   </section>`;
 }
 
+/* the action vocabulary (same as the journal): verb + icon, the most visible thing on every activity screen */
+const ICP = {
+  write:'<path d="M5 27l2-7L22 5l5 5L12 25z M19 8l5 5"/>', draw:'<path d="M4 26c5-8 9 2 14-6s6-10 10-12"/><circle cx="8" cy="9" r="3"/>',
+  read:'<path d="M4 7c5-2 9-1 12 2 3-3 7-4 12-2v18c-5-2-9-1-12 2-3-3-7-4-12-2z M16 9v18"/>', look:'<path d="M2 16Q16 2 30 16Q16 30 2 16z"/><circle cx="16" cy="16" r="4.5"/>',
+  talk:'<path d="M5 6h22v14H14l-6 6v-6H5z"/>', think:'<path d="M16 4a8 8 0 0 0-5 14v4h10v-4A8 8 0 0 0 16 4z M12 26h8 M13 29h6"/>',
+  pick:'<path d="M11 15V6a2.5 2.5 0 0 1 5 0v8 M16 13a2.5 2.5 0 0 1 5 0v2 M21 15a2.5 2.5 0 0 1 5 0v4c0 6-4 9-9 9s-7-2-9-6l-3-6a2 2 0 0 1 3.5-2L11 18"/>',
+  check:'<rect x="4" y="4" width="24" height="24" rx="4"/><path d="M9 16l5 5 9-10"/>', compare:'<path d="M4 11h20l-5-5 M28 21H8l5 5"/>',
+  search:'<circle cx="13" cy="13" r="8"/><path d="M19 19l9 9"/>', ear:'<path d="M10 13a7 7 0 0 1 14 0c0 5-5 6-5 11a4 4 0 0 1-8 0 M14 14a3 3 0 0 1 6 0"/>'
+};
+const ACT = {'בוחרים':'pick','מסמנים':'check','מקיפים':'check','כותבים':'write','מציירים':'draw','מסתכלים':'look','מתעדים':'look','מנחשים':'think','חושבים':'think','משווים':'compare','בודקים':'search','מסבירים':'talk','קוראים':'read','מחברים':'compare','מקשיבים':'ear'};
+const KIND_ACT = {open:'חושבים',predict:'מנחשים',explore:'מסתכלים',explain:'מקשיבים',write:'כותבים',reflect:'בודקים',close:'בוחרים'};
+const actPill = v => `<span class="actpill"><svg viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ICP[ACT[v]||'think']}</g></svg><b>${esc(v)}</b></span>`;
+
+/* one screen per activity: [guess] → [do] → [simulation(s)] — no separate "stage opener" or repeated screens */
 function stageFrames(l, s, si, total, ctx){
-  const m = MODE[s.mode] || MODE.class, t = s.teacher || {}, mins = s.to - s.from;
-  const label = '';                       // less on every screen: no stage/time line
-  const work = s.mode && s.mode!=='class'; // independent / pair / group work → visual timer
-  const all = [['מה להגיד',t.say,'say'],['שאלות מנחות',t.ask,'ask'],['לשים לב',t.watch,'watch'],['טיפ',t.tip?[t.tip]:null,'tip']];
-  const out = [];
-  const data = `data-stage="${si}"`;
+  const m = MODE[s.mode] || MODE.class, mins = s.to - s.from;
+  const work = s.mode && s.mode!=='class';
+  const out = [], data = `data-stage="${si}"`;
+  const head = (verb, title) => `<div class="ahead">${actPill(verb)}<span class="chip mode"><span aria-hidden="true">${m[1]}</span> ${m[0]}</span></div>${title?`<p class="atitle">${esc(title)}</p>`:''}`;
   const vtimer = `<div class="vtimer" data-stage="${si}" data-min="${mins}" role="timer" aria-label="טיימר">
       <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="vt-bg" cx="60" cy="60" r="52"/><circle class="vt-ring" cx="60" cy="60" r="52" pathLength="100"/></svg>
       <div class="vt-mid"><output>${mins}:00</output><small>דקות</small></div>
       <div class="vt-ctl"><button type="button" class="vt-minus" aria-label="פחות דקה">−</button><button type="button" class="vt-go" aria-label="הפעלה">▶</button><button type="button" class="vt-plus" aria-label="עוד דקה">+</button><button type="button" class="vt-rs" aria-label="איפוס">↺</button></div>
     </div>`;
-  // 1. stage opener (like the deck's section slides): title + who works with whom
-  out.push(frame('stage', '', '', `
-    <p class="st-kind">${KIND[s.kind]||''}</p>
-    <h3 class="st-title">${esc(s.title||'')}</h3><i class="rule" aria-hidden="true"></i>
-    <div class="st-chips"><span class="chip big"><span aria-hidden="true">${m[1]}</span> ${m[0]}</span></div>`,
-    now(`פותחים שלב חדש: ${esc(s.title||KIND[s.kind])}. עבודה ${m[0]} (בתכנון: ${mins} דק׳).`, all), data));
-  // 2. the question — only the big question and the vote; the instruction goes to the teacher strip
   const g = s.gate;
-  const qBody = `<p class="big-q">${esc(s.lead)}</p>` + (g && list(g.options) ? `<div class="g-opts">${g.options.map((o,k)=>`<button type="button" class="g-opt" data-k="${k}"><span>${esc(o)}</span><b>0</b></button>`).join('')}<button type="button" class="g-clear" title="איפוס הספירה">↺</button></div>` : '');
-  out.push(frame(g?'question':'lead', label, '', qBody,
-    now(g ? `אומרים: ״${esc(g.prompt)}״ — ואז אוספים ניחושים (לחיצה על תשובה = עוד הצבעה). עדיין לא חושפים.` : 'מקריאים את המשפט ומוודאים שכולם יודעים מה המשימה.', g?[['שאלות מנחות',t.ask,'ask'],['לשים לב',t.watch,'watch']]:null), data));
-  // 3. reveal (curtain)
-  if(g) out.push(frame('reveal', label, '', `
-    <div class="curtain"><button type="button" class="g-reveal">כולם ניחשו? לחצו לחשיפה</button></div>
-    <p class="reveal-txt" hidden>${esc(g.reveal)}</p>`,
-    now('רק אחרי שכולם ניחשו: לוחצים על החשיפה.', [['מה להגיד',t.say,'say']]), data));
-  // 4. instructions — at most 2 per screen; work stages get the big visual timer
-  if(list(s.steps)){
-    const n = s.steps.length, per = 2; const chunks = []; for(let i=0;i<n;i+=per) chunks.push(s.steps.slice(i,i+per));
-    chunks.forEach((c,ci)=>{ const last = ci===chunks.length-1;
-      const list2 = `<ol class="steps big" style="counter-reset:st ${ci*per}">${c.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`;
-      out.push(frame('steps', label, '', work ? `<div class="work">${list2}${vtimer}</div>` : list2,
-        now(work ? (last ? 'מקריאים, ומפעילים את הטיימר הגדול (▶). אפשר להוסיף או להוריד דקה.' : 'מקריאים את ההוראות. הטיימר משותף לכל השקופיות של השלב.') : 'מקריאים את ההוראות.',
-            g?[['לשים לב',t.watch,'watch'],['טיפ',t.tip?[t.tip]:null,'tip']]:all), data)); });
+  // A. guess: the question, the vote and the reveal — all on one screen
+  if(g){
+    out.push(frame('guess', '', '', `${head(s.gateAct||'מנחשים', s.title)}
+      <p class="big-q">${esc(s.lead)}</p>
+      ${list(g.options)?`<div class="g-opts">${g.options.map((o,k)=>`<button type="button" class="g-opt" data-k="${k}"><span>${esc(o)}</span><b>0</b></button>`).join('')}<button type="button" class="g-clear" title="איפוס הספירה">↺</button></div>`:''}
+      <div class="reveal-wrap"><button type="button" class="g-reveal">כולם ניחשו? חשיפה</button><p class="reveal-txt" hidden>${esc(g.reveal)}</p></div>`, '', data));
   }
-  // 5. simulation(s) — one screen per sim
+  // B. do: verb + one instruction per line (+ sentence starters + timer when students work)
+  if(list(s.steps) || list(s.starters) || !g){
+    const verb = s.act || KIND_ACT[s.kind] || 'חושבים';
+    const steps = list(s.steps) ? `<ol class="dosteps">${s.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>` : (!g ? `<p class="big-q">${esc(s.lead)}</p>` : '');
+    const st = list(s.starters) ? `<div class="starters slim"><span class="sl-h">אפשר להתחיל כך:</span>${s.starters.map(x=>`<span>${esc(x)}</span>`).join('')}</div>` : '';
+    const body = `${head(verb, g ? '' : s.title)}${work ? `<div class="work">${`<div>${steps}${st}</div>`}${vtimer}</div>` : steps+st}`;
+    out.push(frame('do', '', '', body, '', data));
+  }
+  // C. simulation(s) — each one is its own visual
   const sims = [].concat(s.sim||[]).filter(k=>SIMS[k]);
-  const notes = [].concat(s.simNote||[]);
-  sims.forEach((k,si2)=> out.push(frame('sim', label, '',
-    `<div class="sim-host" data-sim="${k}"></div>`,
-    now(esc(notes[si2]||notes[0]||'מפעילים את ההדמיה במסך המשותף, וקודם מבקשים ניבוי.')), data)));
-  // 6. video (future: s.video = {src, title})
-  if(s.video) out.push(frame('video', label, '',
-    `<video controls preload="metadata" src="${esc(s.video.src)}"></video>`, now('מקרינים את הסרטון. עוצרים בכל כרטיס עצירה ושואלים.'), data));
-  // 7. sentence starters (+ the timer, since writing is independent work)
-  if(list(s.starters)) out.push(frame('starters', label, 'אפשר להתחיל כך',
-    `<div class="starters big">${s.starters.map(x=>`<span>${esc(x)}</span>`).join('')}</div>${work?vtimer.replace('class="vtimer"','class="vtimer small"'):''}`,
-    now('משאירים את המסך הזה פתוח בזמן הכתיבה. לא מראים פסקה לדוגמה.', [['לשים לב',t.watch,'watch']]), data));
+  sims.forEach(k=> out.push(frame('sim', '', '', `<div class="ahead">${actPill('מסתכלים')}</div><div class="sim-host" data-sim="${k}"></div>`, '', data)));
+  if(s.video) out.push(frame('video', '', '', `<div class="ahead">${actPill('מסתכלים')}</div><video controls preload="metadata" src="${esc(s.video.src)}"></video>`, '', data));
 
-  /* journal cues: exactly which page/task to fill on which screen */
-  const cues = (ctx.jcues||[]).filter(c=>c.slide===si);
-  if(cues.length){
-    const has = t => out.some(f=>f.includes(`class="frame f-${t}"`));
-    const qType = g ? 'question' : 'lead';
-    cues.forEach(c=>{
-      let at = c.at==='question' ? qType : c.at;
-      if(!has(at)) at = has('steps') ? 'steps' : qType;
-      const k = out.findIndex(f=>f.includes(`class="frame f-${at}"`)); if(k<0) return;
-      const lab = c.label;
-      const banner = `<div class="jcue"><span class="jicon" aria-hidden="true">📒</span><p class="jwhere">יומן · ${lab.pages}${lab.tasks}</p></div>`;
-      out[k] = out[k].replace('<div class="fr-body">', '<div class="fr-body">'+banner)
-                     .replace('<b>עכשיו</b><span>', `<b>עכשיו</b><span><b class="jn">📒 יומן: ${lab.pages}${lab.tasks} — ${esc(c.do)}</b> `);
-    });
-    const sum = [...new Set(cues.map(c=>c.label.pages))].join(', ');
-    out[0] = out[0].replace('<p class="st-count">', `<p class="st-journal">📒 ביומן החוקר: ${sum}</p><p class="st-count">`);
-  }
+  /* journal cue chip on the screen where students use the journal */
+  (ctx.jcues||[]).filter(c=>c.slide===si).forEach(c=>{
+    const want = c.at==='question' ? 'guess' : c.at==='sim' ? 'sim' : 'do';
+    let k = out.findIndex(f=>f.includes(`class="frame f-${want}"`)); if(k<0) k = out.findIndex(f=>f.includes('class="frame f-do"')); if(k<0) k=0;
+    const chip = `<span class="jchip">📒 יומן · ${c.label.pages}${c.label.tasks}</span>`;
+    if(!out[k].includes(chip)) out[k] = out[k].replace('</div>', chip+'</div>');   // into the .ahead row
+  });
   return out;
 }
 
@@ -117,11 +101,11 @@ function html(l, ctx){
 
 function wire(l, ctx){
   const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
-  $$('.f-question').forEach(f=>f.addEventListener('click',e=>{
+  $$('.f-guess').forEach(f=>f.addEventListener('click',e=>{
     const o=e.target.closest('.g-opt'); if(o){ const b=o.querySelector('b'); b.textContent=+b.textContent+1; o.classList.remove('bump'); void o.offsetWidth; o.classList.add('bump'); }
     if(e.target.closest('.g-clear')) $$('.g-opt b',f).forEach(b=>b.textContent=0);
   }));
-  $$('.f-reveal').forEach(f=>f.querySelector('.g-reveal').addEventListener('click',()=>{ f.querySelector('.curtain').classList.add('open'); const t=f.querySelector('.reveal-txt'); t.hidden=false; window.MOTION&&MOTION.reveal(t); }));
+  $$('.f-guess .g-reveal').forEach(b=>b.addEventListener('click',()=>{ const t=b.parentElement.querySelector('.reveal-txt'); t.hidden=false; b.hidden=true; window.MOTION&&MOTION.reveal(t); }));
   const frames = $$('.frame'), total = frames.length, cnt = document.querySelector('.fcount'), bar = document.querySelector('.minute i');
   const setActive = k => {
     const f = frames[k]; if(!f) return; const st = +f.dataset.stage;

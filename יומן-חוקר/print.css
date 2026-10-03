@@ -149,3 +149,7 @@ thead th{padding:1mm 3mm}
 .pbody{gap:2.2mm}
 .ph{margin-bottom:2.4mm}
 .pf{margin-top:1.4mm}
+
+.selfbox.tall2{min-height:62mm}
+.way .fr .blank:only-child{flex:1}
+.selfbox.tall2{min-height:56mm}

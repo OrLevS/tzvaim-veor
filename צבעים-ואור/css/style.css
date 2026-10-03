@@ -501,3 +501,25 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;op
 /* calm text: no entrance motion on text */
 .jcue{animation:none}
 .fr-in>*{opacity:1!important;transform:none!important;transition:none!important}
+
+/* ===== one screen per activity: the action is the headline (same rules as the journal) ===== */
+.f-guess .fr-in,.f-do .fr-in,.f-sim .fr-in{display:flex;flex-direction:column;align-items:center}
+.f-guess .fr-body,.f-do .fr-body,.f-sim .fr-body{width:100%;display:flex;flex-direction:column;align-items:center}
+.ahead{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.actpill{display:inline-flex;align-items:center;gap:12px;background:var(--navy);color:#fff;border-radius:18px;padding:10px 26px 10px 22px;font-size:clamp(26px,3vw,40px);line-height:1}
+.actpill svg{width:1.05em;height:1.05em}
+.actpill b{font-family:var(--display);font-weight:400}
+.ahead .chip.mode{font-size:18px;padding:6px 16px;background:#fff}
+.jchip{display:inline-flex;align-items:center;gap:6px;background:var(--gold);color:var(--navy);font-weight:700;font-size:clamp(17px,1.7vw,22px);border-radius:999px;padding:6px 18px}
+.atitle{margin:0 0 18px;font-size:clamp(18px,1.8vw,22px);color:var(--muted)}
+.f-guess .big-q{margin:6px 0 22px}
+.reveal-wrap{margin-top:26px;display:flex;flex-direction:column;align-items:center;gap:14px;max-width:880px}
+.reveal-wrap .g-reveal{font-size:19px;padding:10px 24px}
+.dosteps{list-style:none;counter-reset:d;margin:8px auto 0;padding:0;display:grid;gap:12px;max-width:860px;text-align:start}
+.dosteps li{counter-increment:d;position:relative;font-size:clamp(22px,2.4vw,31px);line-height:1.4;padding:14px 22px;padding-inline-start:74px;background:var(--paper);border-radius:18px;box-shadow:0 2px 10px rgba(38,70,83,.06)}
+.dosteps li::before{content:counter(d);position:absolute;inset-inline-start:16px;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--k);color:#fff;font-weight:700;font-size:20px}
+.starters.slim{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin-top:20px;max-width:860px}
+.starters.slim .sl-h{font-size:17px;color:var(--muted)}
+.starters.slim span:not(.sl-h){font-size:clamp(18px,1.9vw,24px);background:var(--butter);border-radius:12px;padding:6px 14px}
+.f-do .work{align-items:start}
+.f-sim .ahead{margin-bottom:10px}
