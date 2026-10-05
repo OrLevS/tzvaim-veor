@@ -38,18 +38,41 @@ const ACT = {'בוחרים':'pick','מסמנים':'check','מקיפים':'check'
 const KIND_ACT = {open:'חושבים',predict:'מנחשים',explore:'מסתכלים',explain:'מקשיבים',write:'כותבים',reflect:'בודקים',close:'בוחרים'};
 const actPill = v => `<span class="actpill"><svg viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ICP[ACT[v]||'think']}</g></svg><b>${esc(v)}</b></span>`;
 
-/* one screen per activity: [guess] → [do] → [simulation(s)] — no separate "stage opener" or repeated screens */
+/* one screen per activity: [reading] → [guess] → [tasks (or "do")] ↔ [simulation(s)].
+   Journal tasks are shown on screen: ✏️ במחברת or 🗳 מצביעים (no printing needed). */
 function stageFrames(l, s, si, total, ctx){
   const m = MODE[s.mode] || MODE.class, mins = s.to - s.from;
   const work = s.mode && s.mode!=='class';
-  const out = [], data = `data-stage="${si}"`;
-  const head = (verb, title) => `<div class="ahead">${actPill(verb)}<span class="chip mode"><span aria-hidden="true">${m[1]}</span> ${m[0]}</span></div>${title?`<p class="atitle">${esc(title)}</p>`:''}`;
+  const out = [], data = `data-stage="${si}"`, T = window.TASKS;
+  const head = (verb, title, chip) => `<div class="ahead">${actPill(verb)}<span class="chip mode"><span aria-hidden="true">${m[1]}</span> ${m[0]}</span>${chip||''}</div>${title?`<p class="atitle">${esc(title)}</p>`:''}`;
   const vtimer = `<div class="vtimer" data-stage="${si}" data-min="${mins}" role="timer" aria-label="טיימר">
       <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="vt-bg" cx="60" cy="60" r="52"/><circle class="vt-ring" cx="60" cy="60" r="52" pathLength="100"/></svg>
       <div class="vt-mid"><output>${mins}:00</output><small>דקות</small></div>
       <div class="vt-ctl"><button type="button" class="vt-minus" aria-label="פחות דקה">−</button><button type="button" class="vt-go" aria-label="הפעלה">▶</button><button type="button" class="vt-plus" aria-label="עוד דקה">+</button><button type="button" class="vt-rs" aria-label="איפוס">↺</button></div>
     </div>`;
+  const withTimer = body => work ? `<div class="work"><div class="wbody">${body}</div>${vtimer}</div>` : body;
   const g = s.gate;
+
+  /* collect the journal blocks for this stage (in page order, not used before) */
+  const pre = [], tasks = [];
+  if(T && ctx.jblocks){
+    (ctx.jcues||[]).filter(c=>c.slide===si).forEach(c=>{
+      const B = ctx.jblocks, i0 = B.findIndex(x=>x.id===c.block), i1 = c.until ? B.findIndex(x=>x.id===c.until) : i0;
+      if(i0<0) return;
+      let st = i0; while(st>0 && (T.CONTENT[B[st-1].type] || B[st-1].type==='note') && !ctx.used.has(B[st-1].id)) st--;
+      for(let i=st;i<=Math.max(i0,i1);i++){ const bl=B[i]; if(ctx.used.has(bl.id) || bl.type==='flow' || bl.type==='bank' || bl.type==='legend') continue;
+        ctx.used.add(bl.id);
+        if(i===i0 && c.at==='question' && g) continue;           // the guess screen already asks this
+        (c.at==='question' && i<i0 ? pre : tasks).push(bl); }
+    });
+  }
+  /* reading screens (consecutive content blocks share one screen) */
+  const readFrames = list2 => { const fr=[]; let buf=[];
+    const flush=()=>{ if(buf.length){ fr.push(frame('read','','',`${head(buf.some(b=>b.type==='diagram')?'מסתכלים':'קוראים')}${buf.map(b=>b.type==='note'?`<p class="tnote">${esc(b.text)}</p>`:T.content(b)).join('')}`,'',data)); buf=[]; } };
+    list2.forEach(b=>{ if(T.CONTENT[b.type]||b.type==='note') buf.push(b); else { flush(); const t=T.task(b); if(t) fr.push(frame('task','','',`${head(b.act||'חושבים','', t.mode==='vote'?T.VOTE:T.NOTEBOOK)}${withTimer(`<div class="tbody">${t.body}</div>`)}`,'',data)); } });
+    flush(); return fr; };
+
+  out.push(...readFrames(pre));
   // A. guess: the question, the vote and the reveal — all on one screen
   if(g){
     out.push(frame('guess', '', '', `${head(s.gateAct||'מנחשים', s.title)}
@@ -57,39 +80,34 @@ function stageFrames(l, s, si, total, ctx){
       ${list(g.options)?`<div class="g-opts">${g.options.map((o,k)=>`<button type="button" class="g-opt" data-k="${k}"><span>${esc(o)}</span><b>0</b></button>`).join('')}<button type="button" class="g-clear" title="איפוס הספירה">↺</button></div>`:''}
       <div class="reveal-wrap"><button type="button" class="g-reveal">כולם ניחשו? חשיפה</button><p class="reveal-txt" hidden>${esc(g.reveal)}</p></div>`, '', data));
   }
-  // B. do: verb + one instruction per line (+ sentence starters + timer when students work)
-  if(list(s.steps) || list(s.starters) || !g){
+  const sims = [].concat(s.sim||[]).filter(k=>SIMS[k]);
+  const simFrames = sims.map(k=> frame('sim', '', '', `<div class="ahead">${actPill('מסתכלים')}</div><div class="sim-host" data-sim="${k}"></div>`, '', data));
+  if(s.video) simFrames.push(frame('video', '', '', `<div class="ahead">${actPill('מסתכלים')}</div><video controls preload="metadata" src="${esc(s.video.src)}"></video>`, '', data));
+  const taskFrames = readFrames(tasks);
+  // B. do: when there are no journal tasks for this stage — verb + one instruction per line
+  let doFrames = [];
+  if(!taskFrames.length && (list(s.steps) || list(s.starters) || !g)){
     const verb = s.act || KIND_ACT[s.kind] || 'חושבים';
     const steps = list(s.steps) ? `<ol class="dosteps">${s.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>` : (!g ? `<p class="big-q">${esc(s.lead)}</p>` : '');
     const st = list(s.starters) ? `<div class="starters slim"><span class="sl-h">אפשר להתחיל כך:</span>${s.starters.map(x=>`<span>${esc(x)}</span>`).join('')}</div>` : '';
-    const body = `${head(verb, g ? '' : s.title)}${work ? `<div class="work">${`<div>${steps}${st}</div>`}${vtimer}</div>` : steps+st}`;
-    out.push(frame('do', '', '', body, '', data));
+    doFrames.push(frame('do', '', '', `${head(verb, g ? '' : s.title)}${withTimer(steps+st)}`, '', data));
   }
-  // C. simulation(s) — each one is its own visual
-  const sims = [].concat(s.sim||[]).filter(k=>SIMS[k]);
-  sims.forEach(k=> out.push(frame('sim', '', '', `<div class="ahead">${actPill('מסתכלים')}</div><div class="sim-host" data-sim="${k}"></div>`, '', data)));
-  if(s.video) out.push(frame('video', '', '', `<div class="ahead">${actPill('מסתכלים')}</div><video controls preload="metadata" src="${esc(s.video.src)}"></video>`, '', data));
-
-  /* journal cue chip on the screen where students use the journal */
-  (ctx.jcues||[]).filter(c=>c.slide===si).forEach(c=>{
-    const want = c.at==='question' ? 'guess' : c.at==='sim' ? 'sim' : 'do';
-    let k = out.findIndex(f=>f.includes(`class="frame f-${want}"`)); if(k<0) k = out.findIndex(f=>f.includes('class="frame f-do"')); if(k<0) k=0;
-    const chip = `<span class="jchip">📒 יומן · ${c.label.pages}${c.label.tasks}</span>`;
-    if(!out[k].includes(chip)) out[k] = out[k].replace('</div>', chip+'</div>');   // into the .ahead row
-  });
+  if(s.simFirst) out.push(...simFrames, ...taskFrames, ...doFrames);
+  else out.push(...doFrames, ...taskFrames, ...simFrames);
   return out;
 }
 
 function html(l, ctx){
   const next = ctx.next, st = ctx.stage, total = l.slides.length;
   const J = (window.JOURNAL||{})[l.n];
+  ctx.used = new Set(); ctx.jblocks = J ? J.pages.flatMap(p=>p.blocks) : null;
   if(J && window.JOURNAL_INDEX){ const ix = window.JOURNAL_INDEX(J); ctx.jcues = (J.cues||[]).map(c=>Object.assign({}, c, {label: window.JOURNAL_CUE_LABEL(J, ix, c)})).filter(c=>c.label); ctx.jpages = J.pages.length; }
   const cover = frame('cover', `${ctx.typeName(l.t)} · שיעור ${l.n} · ${l.c} באשכול`, '',
     `<div class="cover-grid"><h2 class="q">${esc(l.q)}</h2><figure class="cover-art"><svg viewBox="0 0 640 360" id="coverSvg" role="img" aria-label="${esc(l.q)}">${typeof SCENES!=='undefined'&&SCENES[l.cover]?SCENES[l.cover]():''}</svg></figure></div>`,
     now('השקופית הפותחת. משאירים אותה על המסך כשנכנסים לכיתה.'), 'data-stage="0"');
   const plan = frame('plan', '', 'מה מחכה לנו היום',
     `<ol class="agenda">${l.slides.map(s=>`<li><span>${esc(s.title||KIND[s.kind])}</span></li>`).join('')}</ol>`,
-    now(ctx.jpages ? `מציגים את מהלך השיעור בקצרה, ומחלקים את יומן החוקר — שיעור ${l.n} (${ctx.jpages} עמודים).` : 'מציגים את מהלך השיעור בקצרה.', [['מטרות',l.goals.map(g=>g[0]+': '+g[1]),'say'],['חומרים',l.mat,'tip'],['שלב הכתיבה · '+st.name,['תמיכה: '+st.sup,'עצמאות מצופה: '+st.exp],'ask'],[esc(l.checkLabel||'בדיקת הבנה'),l.check?[l.check]:null,'watch'],['העמקה לבחירה',l.deep?[l.deep]:null,'ask']]), 'data-stage="0"');
+    now('מציגים את מהלך השיעור בקצרה.', [['מטרות',l.goals.map(g=>g[0]+': '+g[1]),'say'],['חומרים',l.mat,'tip'],['שלב הכתיבה · '+st.name,['תמיכה: '+st.sup,'עצמאות מצופה: '+st.exp],'ask'],[esc(l.checkLabel||'בדיקת הבנה'),l.check?[l.check]:null,'watch'],['העמקה לבחירה',l.deep?[l.deep]:null,'ask']]), 'data-stage="0"');
   const frames = l.slides.flatMap((s,i)=>stageFrames(l,s,i+1,total,ctx));
   const end = frame('end', '', 'סוף השיעור',
     `${next?`<a class="cta" href="#${next.n}">לשיעור ${next.n}: ${esc(next.q)} ←</a>`:'<a class="cta" href="#home">למבט על ←</a>'}`,
@@ -101,9 +119,9 @@ function html(l, ctx){
 
 function wire(l, ctx){
   const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
-  $$('.f-guess').forEach(f=>f.addEventListener('click',e=>{
+  $$('.f-guess, .f-task').forEach(f=>f.addEventListener('click',e=>{
     const o=e.target.closest('.g-opt'); if(o){ const b=o.querySelector('b'); b.textContent=+b.textContent+1; o.classList.remove('bump'); void o.offsetWidth; o.classList.add('bump'); }
-    if(e.target.closest('.g-clear')) $$('.g-opt b',f).forEach(b=>b.textContent=0);
+    if(e.target.closest('.g-clear')) $$('.g-opt b',e.target.closest('.g-opts')).forEach(b=>b.textContent=0);
   }));
   $$('.f-guess .g-reveal').forEach(b=>b.addEventListener('click',()=>{ const t=b.parentElement.querySelector('.reveal-txt'); t.hidden=false; b.hidden=true; window.MOTION&&MOTION.reveal(t); }));
   const frames = $$('.frame'), total = frames.length, cnt = document.querySelector('.fcount'), bar = document.querySelector('.minute i');
