@@ -102,7 +102,7 @@ function html(l, ctx){
   const J = (window.JOURNAL||{})[l.n];
   ctx.used = new Set(); ctx.jblocks = J ? J.pages.flatMap(p=>p.blocks) : null;
   if(J && window.JOURNAL_INDEX){ const ix = window.JOURNAL_INDEX(J); ctx.jcues = (J.cues||[]).map(c=>Object.assign({}, c, {label: window.JOURNAL_CUE_LABEL(J, ix, c)})).filter(c=>c.label); ctx.jpages = J.pages.length; }
-  const cover = frame('cover', `${ctx.typeName(l.t)} · שיעור ${l.n} · ${l.c} באשכול`, '',
+  const cover = frame('cover', `${ctx.typeName(l.t)} · שיעור ${l.label||l.n} · ${l.c} באשכול`, '',
     `<div class="cover-grid"><h2 class="q">${esc(l.q)}</h2><figure class="cover-art"><svg viewBox="0 0 640 360" id="coverSvg" role="img" aria-label="${esc(l.q)}">${typeof SCENES!=='undefined'&&SCENES[l.cover]?SCENES[l.cover]():''}</svg></figure></div>`,
     now('השקופית הפותחת. משאירים אותה על המסך כשנכנסים לכיתה.'), 'data-stage="0"');
   const plan = frame('plan', '', 'מה מחכה לנו היום',
@@ -129,7 +129,7 @@ function wire(l, ctx){
     const f = frames[k]; if(!f) return; const st = +f.dataset.stage;
     $$('.rail a').forEach(a=>a.classList.toggle('on', +a.dataset.stageGo===st));
     if(cnt) cnt.textContent = `${k+1} / ${total}`;
-    const s = l.slides[st-1]; if(bar) bar.style.width = (s ? s.to/45*100 : st===0?0:100)+'%';
+    const s = l.slides[st-1]; if(bar) bar.style.width = (s ? s.to/(l.dur||45)*100 : st===0?0:100)+'%';
     frames.forEach(x=>x.classList.toggle('cur', x===f));
   };
   const io = new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); if(!e.target.dataset.played){ e.target.dataset.played=1; window.MOTION&&MOTION.enter(e.target); } setActive(+e.target.dataset.k); } }),{threshold:.55});

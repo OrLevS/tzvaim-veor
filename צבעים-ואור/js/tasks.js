@@ -44,7 +44,7 @@ function content(b){
     case 'texts': return `<div class="ttexts">${b.items.map(t=>`<div class="ttext"><p class="ttt">${esc(t.title)}</p>${t.list?`<ul>${t.list.map(x=>`<li>${scr(x)}</li>`).join('')}</ul>`:`<p>${scr(t.text)}</p>`}</div>`).join('')}</div>`;
     case 'box': return `<div class="tcard"><p class="ttt">${esc(b.title)}</p><p>${scr(b.text)}</p></div>`;
     case 'route': return `<div class="troute"><b>${esc(b.title)}</b>${b.steps.map((x,i)=>`<span><i class="tmk">${i+1}</i>${esc(x)}</span>`).join('<span class="tarr">←</span>')}</div>`;
-    case 'diagram': return b.name==='sky' ? SKY() : '';
+    case 'diagram': return b.name==='sky' ? SKY() : ((window.JOURNAL_DIAGRAMS||{})[b.name] ? window.JOURNAL_DIAGRAMS[b.name]() : '');
   }
   return '';
 }
@@ -53,8 +53,9 @@ function task(b){
   const head = lines(b.sq||b.q);
   switch(b.type){
     case 'choice': return {mode:'vote', body: head + votes(b.other ? b.options.concat(['אחר']) : b.options) + nbLine(b.linesLabel) + (b.confidence?conf(b.confidence):'')};
-    case 'classify': return {mode:'vote', body: head + `<div class="tkinds">${b.kinds.map(k=>`<span><b>${esc(k.t)}</b> = ${esc(k.d)}</span>`).join('')}</div>
-      <ul class="trows">${b.items.map((x,i)=>`<li${i===0&&b.example!=null?' class="ex"':''}><span class="ttx">${scr(x)}</span>${i===0&&b.example!=null?`<span class="tsolved">${esc(b.kinds[b.example].t)} · פתור</span>`:votes(b.kinds.map(k=>k.t))}</li>`).join('')}</ul>` + nbLine(b.linesLabel)};
+    case 'classify': { const SV = b.solved || (b.example!=null ? {0:b.example} : {});
+      return {mode:'vote', body: head + `<div class="tkinds">${b.kinds.map(k=>`<span><b>${esc(k.t)}</b>${k.d?` = ${esc(k.d)}`:''}</span>`).join('')}</div>
+      <ul class="trows">${b.items.map((x,i)=>`<li${SV[i]!=null?' class="ex"':''}><span class="ttx">${scr(x)}</span>${SV[i]!=null?`<span class="tsolved">${esc(b.kinds[SV[i]].t)} · פתור</span>`:votes(b.kinds.map(k=>k.t))}</li>`).join('')}</ul>` + nbLine(b.linesLabel)}; }
     case 'marks': return {mode:'vote', body: head + `<ol class="trows">${b.items.map(x=>`<li><span class="ttx">${scr(x)}</span>${votes(['✓ מסכים.ה','? לא בטוח.ה','✗ לא נכון'])}</li>`).join('')}</ol>` + nbLine(b.linesLabel)};
     case 'q': return {mode:'nb', body: head + (b.steps?`<ul class="tlist">${b.steps.map(x=>`<li>${scr(x)}</li>`).join('')}</ul>`:'') + (b.linesLabel?`<p class="tsub">${scr(b.linesLabel)}</p>`:'')};
     case 'fields': return {mode:'nb', body: head + `<div class="tfields">${b.fields.map(f=>`<p>${scr(f)} <span class="tblank"></span></p>`).join('')}</div>`};

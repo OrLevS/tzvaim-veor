@@ -19,7 +19,7 @@ const PRINCIPLES=['כל שיעור מתחיל משאלה או תופעה, ומס
 /* ---------- tabs ---------- */
 const tabs=$('#tabs');
 tabs.innerHTML=`<a class="tab" data-id="home" href="#home"><span class="num">★</span><span class="lbl">מבט על</span></a>`+
-  LESSONS.map(l=>`<a class="tab" data-id="${l.n}" data-type="${l.t}" href="#${l.n}"><span class="num">${l.n}</span><span class="lbl">${esc(l.q)}</span></a>`).join('');
+  LESSONS.map(l=>`<a class="tab" data-id="${l.n}" data-type="${l.t}" href="#${l.n}"><span class="num">${l.label||l.n}</span><span class="lbl">${esc(l.q)}</span></a>`).join('');
 
 /* ---------- toggles ---------- */
 const projBtn=$('#projBtn'), motBtn=$('#motBtn');
@@ -67,7 +67,7 @@ function show(id){
   const main=$('#main'); const l=LESSONS.find(x=>String(x.n)===String(id));
   current=l||null; deck=null;
   document.body.classList.toggle('in-deck',!!l);
-  main.innerHTML = l ? DECK.html(l,{next:LESSONS.find(x=>x.n===l.n+1), stage:stageOf(l.n), typeName}) : home();
+  main.innerHTML = l ? DECK.html(l,{next:LESSONS.find(x=>x.n===l.n+1), stage:stageOf(l.stageN||l.n), typeName}) : home();
   $$('.tab').forEach(t=>{const on=t.dataset.id===String(l?l.n:'home'); t.classList.toggle('on',on); if(on){t.setAttribute('aria-current','page'); t.scrollIntoView({inline:'center',block:'nearest'});} else t.removeAttribute('aria-current');});
   window.scrollTo(0,0);
   if(!l){

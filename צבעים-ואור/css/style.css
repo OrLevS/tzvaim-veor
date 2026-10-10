@@ -576,3 +576,27 @@ ol.trows li::before{counter-increment:tr;content:counter(tr);font-weight:700;col
 .tl.sw{border-color:#4A8FD6;border-top-style:dashed}.tl.lw{border-color:#E76F51}
 .tnote{font-size:18px;background:var(--peach);border-radius:12px;padding:8px 16px;margin-top:12px}
 @media (max-width:860px){.ttexts,.tways{grid-template-columns:1fr}.tchain{flex-wrap:wrap}}
+
+/* ===== color-matching game (sims-d: match) ===== */
+.mt{display:flex;flex-direction:column;gap:14px;padding:14px 16px 6px;direction:rtl}
+.mt-round{font-weight:700;font-size:1.15rem;margin:0;color:var(--ink,#264653)}
+.mt-sw{display:flex;gap:18px;justify-content:center}
+.mt-sw figure{margin:0;flex:1;max-width:260px;text-align:center}
+.mt-box{height:150px;border-radius:18px;border:3px solid #264653;box-shadow:0 6px 0 rgba(38,70,83,.15);transition:background .15s}
+.mt-sw figcaption{margin-top:6px;font-weight:700}
+.mt-sliders{display:grid;gap:10px}
+.mt-sl{display:grid;grid-template-columns:7.5rem 1fr 3.2rem;align-items:center;gap:10px}
+.mt-lab{font-weight:700;color:var(--c)}
+.mt-lab small{opacity:.7;font-weight:500}
+.mt-sl input{width:100%;accent-color:var(--c);height:28px}
+.mt-sl output{font-variant-numeric:tabular-nums;font-weight:700;text-align:center;background:#FBF5ED;border-radius:8px;padding:2px 0}
+.mt-act{display:flex;gap:10px;justify-content:center}
+.mt-act .sim-btn{font-size:1.1rem;padding:10px 26px}
+.mt-res{text-align:center;min-height:2.5em}
+.mt-res p{margin:4px 0}
+.mt-pct{font-size:1.2rem}
+.mt-pct b{font-size:2.6rem;color:#E76F51}
+.mt-sum{list-style:none;padding:0;margin:6px auto;display:grid;gap:6px;max-width:320px;text-align:start}
+.mt-sum li{display:flex;align-items:center;gap:10px;font-weight:700}
+.mt-sum i{width:28px;height:28px;border-radius:8px;border:2px solid #264653;flex:0 0 auto}
+@media (max-width:560px){.mt-box{height:110px}.mt-sl{grid-template-columns:5.5rem 1fr 2.8rem}}

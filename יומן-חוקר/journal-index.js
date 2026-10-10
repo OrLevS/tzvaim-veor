@@ -1,6 +1,6 @@
 /* מספור משותף ליומן: עמוד ומספר משימה לכל בלוק. משמש את ההדפסה, הדיגיטל והמצגת. */
 window.JOURNAL_INDEX = function(L){
-  const TASK = {choice:1, q:1, table:1, fields:1, marks:1, classify:1, chain:1, answer3:1, draw:1};
+  const TASK = {choice:1, q:1, table:1, fields:1, marks:1, classify:1, chain:1, answer3:1, draw:1, pairs:1, ways:1};
   const map = {}; let t = 0;
   L.pages.forEach((p,pi)=>p.blocks.forEach(b=>{
     const n = TASK[b.type] ? 1 : 0;
